@@ -7,16 +7,16 @@ use std::ops::{Add, Sub};
 struct Contract {
     start: NaiveDate,
     end: NaiveDate,
-    mileage_start: u64,
-    mileage_allowance: u64,
+    mileage_start: u32,
+    mileage_allowance: u32,
 }
 
 impl Contract {
     fn new(
         start: NaiveDate,
         end: NaiveDate,
-        mileage_start: u64,
-        mileage_allowance: u64,
+        mileage_start: u32,
+        mileage_allowance: u32,
     ) -> Contract {
         if end.sub(start).num_days() < 1 {
             panic!("Contract must be at least 1 day long");
@@ -30,18 +30,18 @@ impl Contract {
         }
     }
 
-    fn days(&self) -> i64 {
-        self.end.sub(self.start).num_days()
+    fn days(&self) -> i32 {
+        i32::try_from(self.end.sub(self.start).num_days()).unwrap()
     }
 
-    fn days_past(&self) -> i64 {
+    fn days_past(&self) -> i32 {
         let today = Utc::now().date_naive();
-        i64::try_from(today.sub(self.start).num_days()).unwrap()
+        i32::try_from(today.sub(self.start).num_days()).unwrap()
     }
 
-    fn days_left(&self) -> i64 {
+    fn days_left(&self) -> i32 {
         let today = Utc::now().date_naive();
-        let left_days = i64::try_from(self.end.sub(today).num_days()).unwrap();
+        let left_days = i32::try_from(self.end.sub(today).num_days()).unwrap();
         let contract_days = self.days();
 
         if left_days > contract_days {
@@ -50,110 +50,109 @@ impl Contract {
         left_days
     }
 
-    fn per_day_budget(&self) -> u64 {
-        self.mileage_allowance / u64::try_from(self.days()).unwrap()
+    fn per_day_budget(&self) -> u32 {
+        self.mileage_allowance / u32::try_from(self.days()).unwrap()
     }
 
-    fn mileage_used(&self, current_mileage: u64) -> u64 {
+    fn mileage_used(&self, current_mileage: u32) -> u32 {
         current_mileage - self.mileage_start
     }
 
-    // todo test
-    fn mileage_left(&self, current_mileage: u64) -> i64 {
-        i64::try_from(self.mileage_start)
+    fn mileage_left(&self, current_mileage: u32) -> i32 {
+        i32::try_from(self.mileage_start)
             .unwrap()
-            .add(i64::try_from(self.mileage_allowance).unwrap())
-            .sub(i64::try_from(current_mileage).unwrap())
+            .add(i32::try_from(self.mileage_allowance).unwrap())
+            .sub(i32::try_from(current_mileage).unwrap())
     }
 
-    fn used_per_day(&self, current_mileage: u64) -> u64 {
+    fn mileage_used_per_day(&self, current_mileage: u32) -> u32 {
         let past = self.days_past();
 
         if past < 0 {
             return 0;
         }
 
-        self.mileage_used(current_mileage) / u64::try_from(past).unwrap()
+        self.mileage_used(current_mileage) / u32::try_from(past).unwrap()
     }
 
-    fn left_per_day(&self, current_mileage: u64) -> i64 {
+    fn mileage_left_per_day(&self, current_mileage: u32) -> i32 {
         self.mileage_left(current_mileage) / self.days_left()
     }
 }
 
 #[derive(Debug)]
-struct HistoryRecord {
-    when: NaiveDate,
-    mileage: u64,
-}
-
-#[derive(Debug)]
-struct Plan {
+struct Trip {
     start: NaiveDate,
     end: NaiveDate,
-    estimated_mileage: i64,
+    estimated_mileage: i32,
 }
 
 #[derive(Debug)]
 struct Status {
-    history: Vec<HistoryRecord>,
-    plans: Vec<Plan>,
+    contract: Contract,
+    history: Vec<(NaiveDate, u32)>,
+    trips: Vec<Trip>,
+}
+
+impl Status {
+    fn get_current_mileage(&self) -> u32 {
+        let history = {
+            let mut history = self.history.clone();
+            history.sort_by(|a, b| a.0.cmp(&b.0));
+            history
+        };
+
+        history.last().unwrap().1
+    }
+
+    fn mileage_used(&self) -> u32 {
+        let current_mileage = self.get_current_mileage();
+        self.contract.mileage_used(current_mileage)
+    }
+
+    fn mileage_left(&self) -> i32 {
+        let current_mileage = self.get_current_mileage();
+        self.contract.mileage_left(current_mileage)
+    }
+
+    fn mileage_used_per_day(&self) -> u32 {
+        let current_mileage = self.get_current_mileage();
+        self.contract.mileage_used_per_day(current_mileage)
+    }
+
+    fn mileage_left_per_day(&self) -> i32 {
+        let current_mileage = self.get_current_mileage();
+        self.contract.mileage_left_per_day(current_mileage)
+    }
 }
 
 fn main() {
-    let insurance = Contract::new(
-        NaiveDate::from_ymd_opt(2023, 6, 1).unwrap(),
-        NaiveDate::from_ymd_opt(2024, 5, 31).unwrap(),
-        59620,
-        15000,
-    );
-    let history = {
-        let mut history = vec![
-            HistoryRecord {
-                when: insurance.start,
-                mileage: insurance.mileage_start,
-            },
-            HistoryRecord {
-                when: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
-                mileage: 62568,
-            },
-            HistoryRecord {
-                when: NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
-                mileage: 85000,
-            },
-        ];
-
-        history.sort_by(|a, b| a.when.cmp(&b.when));
-
-        history
+    let status = Status {
+        contract: Contract::new(
+            NaiveDate::from_ymd_opt(2023, 6, 1).unwrap(),
+            NaiveDate::from_ymd_opt(2024, 5, 31).unwrap(),
+            59620,
+            15000,
+        ),
+        history: vec![
+            (NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(), 62568),
+            (NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(), 85000),
+        ],
+        trips: vec![],
     };
 
-    let current_mileage = history.last().unwrap().mileage;
-
-    println!("insurance days: {}", insurance.days());
-    println!("per day budget: {}KM", insurance.per_day_budget());
+    println!("contract days: {}", status.contract.days());
+    println!("per day budget: {}KM", status.contract.per_day_budget());
 
     println!();
 
-    println!("days past: {}", insurance.days_past());
-    println!(
-        "mileage used: {}KM",
-        insurance.mileage_used(current_mileage)
-    );
-    println!(
-        "avg mileage per day: {}KM",
-        insurance.used_per_day(current_mileage)
-    );
+    println!("days past from contract: {}", status.contract.days_past());
+    println!("mileage used: {}KM", status.mileage_used());
+    println!("avg mileage per day: {}KM", status.mileage_used_per_day());
 
     println!();
 
-    println!("days left: {}", insurance.days_left());
-    println!(
-        "mileage left: {}KM",
-        insurance.mileage_left(current_mileage)
-    );
-    println!(
-        "avg per day left: {}KM",
-        insurance.left_per_day(current_mileage)
-    );
+    println!("days left: {}", status.contract.days_left());
+    println!("mileage left: {}KM", status.mileage_left());
+    println!("avg per day left: {}KM", status.mileage_left_per_day());
 }
