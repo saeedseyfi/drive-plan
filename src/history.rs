@@ -12,13 +12,25 @@ pub struct MileageHistory {
 }
 
 impl MileageHistory {
-    pub fn get_current_mileage(&self) -> u32 {
+    pub fn new() -> MileageHistory {
+        MileageHistory { records: vec![] }
+    }
+
+    pub fn add_record(&mut self, record: MileageRecord) {
+        self.records.push(record);
+        self.records.sort_by(|a, b| a.date.cmp(&b.date));
+    }
+
+    pub fn get_current_mileage(&self) -> Result<u32, &str> {
         let records = {
             let mut records = self.records.clone();
             records.sort_by(|a, b| a.date.cmp(&b.date));
             records
         };
 
-        records.last().unwrap().mileage
+        match records.last() {
+            Some(record) => Ok(record.mileage),
+            None => Err("No mileage records found."),
+        }
     }
 }

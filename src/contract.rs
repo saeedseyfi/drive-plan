@@ -3,10 +3,10 @@ use std::ops::{Add, Sub};
 
 #[derive(Debug)]
 pub struct Contract {
-    start: NaiveDate,
-    end: NaiveDate,
-    mileage_start: u32,
-    mileage_allowance: u32,
+    pub start: NaiveDate,
+    pub end: NaiveDate,
+    pub mileage_start: u32,
+    pub mileage_allowance: u32,
 }
 
 impl Contract {

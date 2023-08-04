@@ -17,11 +17,15 @@ fn main() {
             59620,
             15000,
         ),
-        history: MileageHistory {
-            records: vec![MileageRecord {
+        history: {
+            let mut history = MileageHistory::new();
+
+            history.add_record(MileageRecord {
                 date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
                 mileage: 62568,
-            }],
+            });
+
+            history
         },
     };
 
