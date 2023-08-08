@@ -166,7 +166,7 @@ impl Contract {
     }
 
     fn days_past_this_month(&self) -> Result<u32, &'static str> {
-        let today = self.asserted_today();
+        let today = self.asserted_today()?;
         Ok(today.day0())
     }
 
