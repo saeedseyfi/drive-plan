@@ -1,17 +1,6 @@
 use crate::contract::Contracts;
 use crate::mileage::MileageRecords;
-
-// #[derive(Debug)]
-// pub struct Trip {
-//     start: NaiveDate,
-//     end: NaiveDate,
-//     estimated_mileage: u32,
-// }
-//
-// #[derive(Debug)]
-// struct Trips {
-//     trips: Vec<Trip>
-// }
+use crate::trip::Trips;
 
 #[derive(Debug)]
 pub struct Vehicles {
@@ -20,18 +9,19 @@ pub struct Vehicles {
 
 #[derive(Debug)]
 pub struct Vehicle {
-    pub id: String,
-    pub contracts: Contracts,
-    pub mileage_records: MileageRecords,
-    // pub trips: Trips,
+    pub(crate) id: String,
+    pub(crate) contracts: Contracts,
+    pub(crate) mileage_records: MileageRecords,
+    pub(crate) trips: Trips,
 }
 
 impl Vehicle {
-    pub fn new(id: String) -> Vehicle {
+    pub(crate) fn new(id: String) -> Vehicle {
         Vehicle {
             id,
             contracts: Contracts::new(),
             mileage_records: MileageRecords::new(),
+            trips: Trips::new(),
         }
     }
 }

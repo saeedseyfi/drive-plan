@@ -3,34 +3,34 @@ use std::convert::TryInto;
 
 #[derive(Debug)]
 pub struct Contracts {
-    pub contracts: Vec<Contract>,
+    pub(crate) contracts: Vec<Contract>,
 }
 
 impl Contracts {
-    pub fn new() -> Contracts {
+    pub(crate) fn new() -> Contracts {
         Contracts { contracts: vec![] }
     }
 
-    pub fn add(&mut self, contract: Contract) {
+    pub(crate) fn add(&mut self, contract: Contract) {
         self.contracts.push(contract);
     }
 
-    pub fn get(&self, id: String) -> Option<&Contract> {
+    pub(crate) fn get(&self, id: String) -> Option<&Contract> {
         self.contracts.iter().find(|c| c.id == id)
     }
 }
 
 #[derive(Debug)]
 pub struct Contract {
-    pub id: String,
-    pub start: NaiveDate,
-    pub end: NaiveDate,
-    pub mileage_start: u32,
-    pub mileage_allowance: u32,
+    pub(crate) id: String,
+    pub(crate) start: NaiveDate,
+    pub(crate) end: NaiveDate,
+    pub(crate) mileage_start: u32,
+    pub(crate) mileage_allowance: u32,
 }
 
 impl Contract {
-    pub fn new(
+    pub(crate) fn new(
         id: String,
         start: NaiveDate,
         end: NaiveDate,
@@ -50,7 +50,7 @@ impl Contract {
         })
     }
 
-    pub fn days(&self) -> Result<u32, &'static str> {
+    pub(crate) fn days(&self) -> Result<u32, &'static str> {
         let days = (self.end - self.start).num_days();
         if days < 0 {
             Err("Contract duration cannot be negative.")
@@ -60,22 +60,22 @@ impl Contract {
         }
     }
 
-    pub fn is_not_started(&self) -> bool {
+    pub(crate) fn is_started(&self) -> bool {
         let today = Utc::now().date_naive();
-        (today - self.start).num_days() < 0
+        today >= self.start
     }
 
-    pub fn is_finished(&self) -> bool {
+    pub(crate) fn is_finished(&self) -> bool {
         let today = Utc::now().date_naive();
-        (self.end - today).num_days() < 0
+        today > self.end
     }
 
-    pub fn is_during_period(&self) -> bool {
-        !(self.is_not_started() || self.is_finished())
+    pub(crate) fn is_ongoing(&self) -> bool {
+        self.is_started() || !self.is_finished()
     }
 
     fn assert_during_period(&self) {
-        if !self.is_during_period() {
+        if !self.is_ongoing() {
             panic!("Cases where contract is not started or already finished is not correctly supported.")
         }
     }
@@ -89,7 +89,7 @@ impl Contract {
         Utc::now().date_naive()
     }
 
-    pub fn days_past(&self) -> Result<u32, &'static str> {
+    pub(crate) fn days_past(&self) -> Result<u32, &'static str> {
         let today = self.asserted_today();
         (today - self.start)
             .num_days()
@@ -97,7 +97,7 @@ impl Contract {
             .map_err(|_| "Days passed do not fit into u32 bounds.")
     }
 
-    pub fn days_left(&self) -> Result<u32, &'static str> {
+    pub(crate) fn days_left(&self) -> Result<u32, &'static str> {
         let today = self.asserted_today();
         (self.end - today)
             .num_days()
@@ -105,12 +105,12 @@ impl Contract {
             .map_err(|_| "Days left do not fit into u32 bounds.")
     }
 
-    pub fn per_day_budget(&self) -> Result<u32, &'static str> {
+    pub(crate) fn per_day_budget(&self) -> Result<u32, &'static str> {
         let days = self.days()?;
         Ok(self.mileage_allowance / days)
     }
 
-    pub fn mileage_used(&self, current_mileage: u32) -> Result<u32, &'static str> {
+    pub(crate) fn mileage_used(&self, current_mileage: u32) -> Result<u32, &'static str> {
         if current_mileage < self.mileage_start {
             Err("Current mileage cannot be less than starting mileage.")
         } else {
@@ -118,14 +118,16 @@ impl Contract {
         }
     }
 
-    pub fn mileage_left(&self, current_mileage: u32) -> Result<u32, &'static str> {
+    pub(crate) fn mileage_left(
+        &self,
+        current_mileage: u32,
+        upcoming_trip_mileage: u32,
+    ) -> Result<u32, &'static str> {
         let total_allowed_mileage = self.mileage_start + self.mileage_allowance;
-        (total_allowed_mileage - current_mileage)
-            .try_into()
-            .map_err(|_| "Mileage left do not fit into u32 bounds.")
+        Ok(total_allowed_mileage - current_mileage - upcoming_trip_mileage)
     }
 
-    pub fn mileage_used_per_day(&self, current_mileage: u32) -> Result<u32, &'static str> {
+    pub(crate) fn mileage_used_per_day(&self, current_mileage: u32) -> Result<u32, &'static str> {
         let days_passed = self.days_past()?;
         let mileage_used = self.mileage_used(current_mileage)?;
         (mileage_used / days_passed)
@@ -133,9 +135,13 @@ impl Contract {
             .map_err(|_| "Mileage used do not fit into u32 bounds.")
     }
 
-    pub fn mileage_left_per_day(&self, current_mileage: u32) -> Result<u32, &'static str> {
+    pub(crate) fn mileage_left_per_day(
+        &self,
+        current_mileage: u32,
+        upcoming_trip_mileage: u32,
+    ) -> Result<u32, &'static str> {
         let days_left = self.days_left()?;
-        let mileage_left = self.mileage_left(current_mileage)?;
+        let mileage_left = self.mileage_left(current_mileage, upcoming_trip_mileage)?;
 
         (mileage_left / days_left)
             .try_into()
@@ -151,8 +157,13 @@ impl Contract {
         Ok(7 - self.days_past_this_week()?)
     }
 
-    pub fn mileage_left_this_week(&self, current_mileage: u32) -> Result<u32, &'static str> {
-        let mileage_left_per_day = self.mileage_left_per_day(current_mileage)?;
+    pub(crate) fn mileage_left_this_week(
+        &self,
+        current_mileage: u32,
+        upcoming_trip_mileage: u32,
+    ) -> Result<u32, &'static str> {
+        let mileage_left_per_day =
+            self.mileage_left_per_day(current_mileage, upcoming_trip_mileage)?;
         let days_left_this_week = self.days_left_this_week()?;
 
         Ok(days_left_this_week * mileage_left_per_day)
@@ -176,8 +187,13 @@ impl Contract {
         }
     }
 
-    pub fn mileage_left_this_month(&self, current_mileage: u32) -> Result<u32, &'static str> {
-        let mileage_left_per_day = self.mileage_left_per_day(current_mileage)?;
+    pub(crate) fn mileage_left_this_month(
+        &self,
+        current_mileage: u32,
+        upcoming_trip_mileage: u32,
+    ) -> Result<u32, &'static str> {
+        let mileage_left_per_day =
+            self.mileage_left_per_day(current_mileage, upcoming_trip_mileage)?;
         let days_left_this_month: u32 = self.days_left_this_month()?;
 
         Ok(days_left_this_month * mileage_left_per_day)

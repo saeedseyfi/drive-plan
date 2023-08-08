@@ -2,9 +2,11 @@
 
 mod contract;
 mod mileage;
+mod trip;
 mod user;
 mod vehicle;
 
+use crate::trip::Trip;
 use crate::vehicle::Vehicle;
 use chrono::NaiveDate;
 use contract::Contract;
@@ -35,12 +37,23 @@ fn main() {
             mileage: 62821,
         });
 
+        vehicle.trips.add(
+            Trip::new(
+                String::from("Offsite"),
+                NaiveDate::from_ymd_opt(2023, 8, 14).unwrap(),
+                NaiveDate::from_ymd_opt(2023, 8, 17).unwrap(),
+                200,
+            )
+            .unwrap(),
+        );
+
         vehicle
     };
     let insurance = volvo.contracts.get(String::from("Volvia")).unwrap();
     let mileage = volvo.mileage_records.get_latest_mileage().unwrap();
+    let trips_mileage = volvo.trips.total_upcoming_mileage();
 
-    println!("{:#?}", volvo);
+    println!("{:#?}\n", volvo);
 
     println!("contract days: {}", insurance.days().unwrap());
     println!("per day budget: {}KM", insurance.per_day_budget().unwrap());
@@ -65,22 +78,28 @@ fn main() {
     println!("days left: {}", insurance.days_left().unwrap());
     println!(
         "mileage left: {}KM",
-        insurance.mileage_left(mileage).unwrap()
+        insurance.mileage_left(mileage, trips_mileage).unwrap()
     );
     println!(
         "avg per day left: {}KM",
-        insurance.mileage_left_per_day(mileage).unwrap()
+        insurance
+            .mileage_left_per_day(mileage, trips_mileage)
+            .unwrap()
     );
 
     println!();
 
     println!(
         "mileage left this week: {}KM",
-        insurance.mileage_left_this_week(mileage).unwrap()
+        insurance
+            .mileage_left_this_week(mileage, trips_mileage)
+            .unwrap()
     );
 
     println!(
         "mileage left this month: {}KM",
-        insurance.mileage_left_this_month(mileage).unwrap()
+        insurance
+            .mileage_left_this_month(mileage, trips_mileage)
+            .unwrap()
     );
 }
