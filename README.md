@@ -1,23 +1,60 @@
-# Mileage Budget Management System
+# Mileage Budget Calculator
 
-This system is designed to track and manage a driving contract based on mileage. It allows users to calculate the daily budget, track the mileage used and the mileage left per day.
+## Description
 
-## Components
+This project provides users with the ability to define their vehicles and the mileage-based contracts. It then calculates the budget allowance based on mileage for different periods, allowing users to know how far they can drive within specific durations such as a week or a month. The aim is to help users avoid missing their contract limitations and subsequent unnecessary fees.
 
-- `Contract`: Represents a driving contract that has a start date, end date, starting mileage, and an overall mileage allowance.
+Future releases will integrate features to plan trips, so that your future trips will be included in the calculations.
 
-- `MileageHistory`: Tracks the history of the mileage records of the vehicle.
+## Modules
 
-- `DrivePlan`: Incorporates a `Contract` and `MileageHistory` to provide an overview and details about the driving plan. It calculates the total mileage used, mileage left, average mileage used per day, and average mileage left per day.
+1. **contract**: Manages contracts related to vehicles.
+2. **mileage**: Manages the recording of mileage.
+3. **user**: Manages user-specific data, including their vehicles.
+4. **vehicle**: Manages details related to individual vehicles.
 
-- `Trip`: A structure that can represent planned trips, including start and end dates as well as estimated mileage. (NOTE: as of now, `Trip` functionality has not been fully implemented)
+## Features
 
-## Usage
+- Define vehicles and associated contracts.
+- Add mileage records for vehicles.
+- Calculate the number of kilometers left in the weekly or monthly budget.
+- Provides detailed information about contracts and their status.
 
-Users can create instances of `Contract`, `MileageHistory`, and `DrivePlan`. They can then use various methods provided by these structures to calculate and monitor different aspects of the driving contract, like days passed/left in the contract, average daily mileage usage, and more.
+## Future Enhancements
 
-## Future Directions
+- Ability to plan future trips.
+- Include future trips in the mileage budget calculations.
 
-The system could be extended to include further handling for `Trips`, allowing users to add or remove `Trips`, and incorporating `Trip` data into mileage usage and availability calculations. Additionally, the system could be adjusted to consider different timezones based on user needs.
+## Getting Started
 
-Overall, this system provides a robust framework for managing mileage-based driving contracts and can be easily expanded to include additional functionality as needed.
+1. **Clone the Repository**
+
+   ```
+   git clone git@github.com:saeedseyfi/drive-plan.git
+   ```
+
+2. **Build the Project**
+
+   Navigate to the project directory and use the Rust's package manager, Cargo:
+
+   ```
+   cargo build
+   ```
+
+3. **Run the Project**
+
+   After building, you can run the project:
+
+   ```
+   cargo run
+   ```
+
+4. Feel free to expand upon the given modules, or integrate this into a larger system that requires mileage budget calculations.
+
+## Contributions
+
+Contributions, bug reports, and feature requests are welcome! Please open an issue or submit a pull request.
+
+## License
+
+This project is open-source. Ensure you adhere to the licensing terms when using or modifying this software.

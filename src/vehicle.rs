@@ -14,6 +14,11 @@ use crate::mileage::MileageRecords;
 // }
 
 #[derive(Debug)]
+pub struct Vehicles {
+    vehicles: Vec<Vehicle>,
+}
+
+#[derive(Debug)]
 pub struct Vehicle {
     pub id: String,
     pub contracts: Contracts,

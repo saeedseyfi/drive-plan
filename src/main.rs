@@ -1,7 +1,8 @@
-//! Calculates the monthly mileage budget based on insurance.
+//! Mileage Budget Calculator
 
 mod contract;
 mod mileage;
+mod user;
 mod vehicle;
 
 use crate::vehicle::Vehicle;
