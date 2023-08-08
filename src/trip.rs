@@ -42,7 +42,7 @@ impl Trips {
         Trips { trips: vec![] }
     }
 
-    pub(crate) fn add(&mut self, trip: Trip) -> &mut self {
+    pub(crate) fn add(&mut self, trip: Trip) -> &mut Self {
         self.trips.push(trip);
         self
     }
