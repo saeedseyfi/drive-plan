@@ -16,9 +16,10 @@ impl MileageRecords {
         MileageRecords { records: vec![] }
     }
 
-    pub(crate) fn add(&mut self, record: MileageRecord) {
+    pub(crate) fn add(&mut self, record: MileageRecord) -> &mut Self {
         self.records.push(record);
         self.records.sort_by(|a, b| a.date.cmp(&b.date));
+        self
     }
 
     pub(crate) fn get_latest_mileage(&self) -> Result<u32, &str> {

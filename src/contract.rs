@@ -11,8 +11,9 @@ impl Contracts {
         Contracts { contracts: vec![] }
     }
 
-    pub(crate) fn add(&mut self, contract: Contract) {
+    pub(crate) fn add(&mut self, contract: Contract) -> &mut Self {
         self.contracts.push(contract);
+        self
     }
 
     pub(crate) fn get(&self, id: String) -> Option<&Contract> {

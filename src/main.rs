@@ -27,15 +27,16 @@ fn main() {
             .unwrap(),
         );
 
-        vehicle.mileage_records.add(MileageRecord {
-            date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
-            mileage: 62568,
-        });
-
-        vehicle.mileage_records.add(MileageRecord {
-            date: NaiveDate::from_ymd_opt(2023, 8, 6).unwrap(),
-            mileage: 62821,
-        });
+        vehicle
+            .mileage_records
+            .add(MileageRecord {
+                date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+                mileage: 62568,
+            })
+            .add(MileageRecord {
+                date: NaiveDate::from_ymd_opt(2023, 8, 6).unwrap(),
+                mileage: 62821,
+            });
 
         vehicle.trips.add(
             Trip::new(

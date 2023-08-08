@@ -9,7 +9,7 @@ pub struct Trip {
 }
 
 impl Trip {
-    pub fn new(
+    pub(crate) fn new(
         name: String,
         start: NaiveDate,
         end: NaiveDate,
@@ -26,7 +26,7 @@ impl Trip {
         })
     }
 
-    pub fn is_past(&self) -> bool {
+    pub(crate) fn is_past(&self) -> bool {
         let today = Utc::now().date_naive();
         self.end < today
     }
@@ -38,15 +38,16 @@ pub struct Trips {
 }
 
 impl Trips {
-    pub fn new() -> Trips {
+    pub(crate) fn new() -> Trips {
         Trips { trips: vec![] }
     }
 
-    pub fn add(&mut self, trip: Trip) {
+    pub(crate) fn add(&mut self, trip: Trip) -> &mut self {
         self.trips.push(trip);
+        self
     }
 
-    pub fn total_upcoming_mileage(&self) -> u32 {
+    pub(crate) fn total_upcoming_mileage(&self) -> u32 {
         self.trips
             .iter()
             .filter(|trip| !trip.is_past())
