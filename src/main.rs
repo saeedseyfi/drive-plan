@@ -1,46 +1,85 @@
 //! Calculates the monthly mileage budget based on insurance.
 
 mod contract;
-mod drive_plan;
-mod history;
+mod mileage;
+mod vehicle;
 
-use crate::drive_plan::DrivePlan;
+use crate::vehicle::Vehicle;
 use chrono::NaiveDate;
 use contract::Contract;
-use history::{MileageHistory, MileageRecord};
+use mileage::MileageRecord;
 
 fn main() {
-    let plan = DrivePlan {
-        contract: Contract::new(
-            NaiveDate::from_ymd_opt(2023, 6, 1).unwrap(),
-            NaiveDate::from_ymd_opt(2024, 5, 31).unwrap(),
-            59620,
-            15000,
-        ),
-        history: {
-            let mut history = MileageHistory::new();
+    let volvo = {
+        let mut vehicle = Vehicle::new(String::from("Volvo V60 CPA53U"));
 
-            history.add_record(MileageRecord {
-                date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
-                mileage: 62568,
-            });
+        vehicle.contracts.add(
+            Contract::new(
+                String::from("Volvia"),
+                NaiveDate::from_ymd_opt(2023, 6, 1).unwrap(),
+                NaiveDate::from_ymd_opt(2024, 5, 31).unwrap(),
+                59620,
+                15000,
+            )
+            .unwrap(),
+        );
 
-            history
-        },
+        vehicle.mileage_records.add(MileageRecord {
+            date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+            mileage: 62568,
+        });
+
+        vehicle.mileage_records.add(MileageRecord {
+            date: NaiveDate::from_ymd_opt(2023, 8, 6).unwrap(),
+            mileage: 62821,
+        });
+
+        vehicle
     };
+    let insurance = volvo.contracts.get(String::from("Volvia")).unwrap();
+    let mileage = volvo.mileage_records.get_latest_mileage().unwrap();
 
-    println!("contract days: {}", plan.contract.days());
-    println!("per day budget: {}KM", plan.contract.per_day_budget());
+    println!("{:#?}", volvo);
 
-    println!();
-
-    println!("days past from contract: {}", plan.contract.days_past());
-    println!("mileage used: {}KM", plan.mileage_used());
-    println!("avg mileage per day: {}KM", plan.mileage_used_per_day());
+    println!("contract days: {}", insurance.days().unwrap());
+    println!("per day budget: {}KM", insurance.per_day_budget().unwrap());
 
     println!();
 
-    println!("days left: {}", plan.contract.days_left());
-    println!("mileage left: {}KM", plan.mileage_left());
-    println!("avg per day left: {}KM", plan.mileage_left_per_day());
+    println!(
+        "days past from contract: {}",
+        insurance.days_past().unwrap()
+    );
+    println!(
+        "mileage used: {}KM",
+        insurance.mileage_used(mileage).unwrap()
+    );
+    println!(
+        "avg mileage per day: {}KM",
+        insurance.mileage_used_per_day(mileage).unwrap()
+    );
+
+    println!();
+
+    println!("days left: {}", insurance.days_left().unwrap());
+    println!(
+        "mileage left: {}KM",
+        insurance.mileage_left(mileage).unwrap()
+    );
+    println!(
+        "avg per day left: {}KM",
+        insurance.mileage_left_per_day(mileage).unwrap()
+    );
+
+    println!();
+
+    println!(
+        "mileage left this week: {}KM",
+        insurance.mileage_left_this_week(mileage).unwrap()
+    );
+
+    println!(
+        "mileage left this month: {}KM",
+        insurance.mileage_left_this_month(mileage).unwrap()
+    );
 }
