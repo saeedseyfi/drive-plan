@@ -74,23 +74,19 @@ impl Contract {
         self.is_started() || !self.is_finished()
     }
 
-    fn assert_during_period(&self) {
-        if !self.is_ongoing() {
-            panic!("Cases where contract is not started or already finished is not correctly supported.")
-        }
-    }
-
     /// Makes sure today is within the contract period before returning the current date.
     /// This method is supposed to be used when we want to get the contract status based current date, but if the contract is already ended or not even started the calculations should bail.
     /// Use the "history" (for passed contract) or "predictions" (for oncoming) contracts.
-    fn asserted_today(&self) -> NaiveDate {
-        self.assert_during_period();
-
-        Utc::now().date_naive()
+    fn asserted_today(&self) -> Result<NaiveDate, &'static str> {
+        return if self.is_ongoing() {
+            Ok(Utc::now().date_naive())
+        } else {
+            Err("Cases where contract is not started or already finished is not correctly supported.")
+        };
     }
 
     pub(crate) fn days_past(&self) -> Result<u32, &'static str> {
-        let today = self.asserted_today();
+        let today = self.asserted_today()?;
         (today - self.start)
             .num_days()
             .try_into()
@@ -98,7 +94,7 @@ impl Contract {
     }
 
     pub(crate) fn days_left(&self) -> Result<u32, &'static str> {
-        let today = self.asserted_today();
+        let today = self.asserted_today()?;
         (self.end - today)
             .num_days()
             .try_into()
@@ -149,7 +145,7 @@ impl Contract {
     }
 
     fn days_past_this_week(&self) -> Result<u32, &'static str> {
-        let today = self.asserted_today();
+        let today = self.asserted_today()?;
         Ok(today.weekday().num_days_from_monday())
     }
 
@@ -175,7 +171,7 @@ impl Contract {
     }
 
     fn days_left_this_month(&self) -> Result<u32, &'static str> {
-        let today = self.asserted_today();
+        let today = self.asserted_today()?;
         let month = today.month();
         let days_in_month =
             NaiveDate::from_ymd_opt(today.year(), if month == 12 { 1 } else { month + 1 }, 1)
