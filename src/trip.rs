@@ -2,15 +2,15 @@ use chrono::{NaiveDate, Utc};
 
 #[derive(Debug)]
 pub struct Trip {
-    pub(crate) name: String,
-    pub(crate) start: NaiveDate,
+    // pub(crate) name: String,
+    // pub(crate) start: NaiveDate,
     pub(crate) end: NaiveDate,
     pub(crate) estimated_mileage: u32,
 }
 
 impl Trip {
     pub(crate) fn new(
-        name: String,
+        _name: String,
         start: NaiveDate,
         end: NaiveDate,
         estimated_mileage: u32,
@@ -19,8 +19,8 @@ impl Trip {
             return Err("Trip end date must be after the start date.");
         }
         Ok(Trip {
-            name,
-            start,
+            // name,
+            // start,
             end,
             estimated_mileage,
         })
