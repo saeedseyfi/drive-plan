@@ -79,11 +79,11 @@ impl Contract {
     /// This method is supposed to be used when we want to get the contract status based current date, but if the contract is already ended or not even started the calculations should bail.
     /// Use the "history" (for passed contract) or "predictions" (for oncoming) contracts.
     fn asserted_today(&self) -> Result<NaiveDate, &'static str> {
-        return if self.is_ongoing() {
+        if self.is_ongoing() {
             Ok(Utc::now().date_naive())
         } else {
             Err("Cases where contract is not started or already finished is not correctly supported.")
-        };
+        }
     }
 
     pub(crate) fn days_past(&self) -> Result<u32, &'static str> {
@@ -127,9 +127,7 @@ impl Contract {
     pub(crate) fn mileage_used_per_day(&self, current_mileage: u32) -> Result<u32, &'static str> {
         let days_passed = self.days_past()?;
         let mileage_used = self.mileage_used(current_mileage)?;
-        (mileage_used / days_passed)
-            .try_into()
-            .map_err(|_| "Mileage used do not fit into u32 bounds.")
+        Ok(mileage_used / days_passed)
     }
 
     pub(crate) fn mileage_left_per_day(
@@ -139,10 +137,7 @@ impl Contract {
     ) -> Result<u32, &'static str> {
         let days_left = self.days_left()?;
         let mileage_left = self.mileage_left(current_mileage, upcoming_trip_mileage)?;
-
-        (mileage_left / days_left)
-            .try_into()
-            .map_err(|_| "Mileage used do not fit into u32 bounds.")
+        Ok(mileage_left / days_left)
     }
 
     fn days_past_this_week(&self) -> Result<u32, &'static str> {
@@ -176,12 +171,12 @@ impl Contract {
         let month = today.month();
         let days_in_month =
             NaiveDate::from_ymd_opt(today.year(), if month == 12 { 1 } else { month + 1 }, 1)
-                .and_then(|d| d.pred_opt().and_then(|d| Some(d.day())));
+                .ok_or("Unable to get first day of next month.")?
+                .pred_opt()
+                .ok_or("Unable to get last day of month.")?
+                .day();
 
-        match days_in_month {
-            Some(days) => Ok(days - self.days_past_this_month()?),
-            None => Err("Unable to get days in the current month."),
-        }
+        Ok(days_in_month - self.days_past_this_month()?)
     }
 
     pub(crate) fn mileage_left_this_month(

@@ -1,6 +1,6 @@
-use crate::vehicle::Vehicles;
+// use crate::vehicle::Vehicles;
 
 #[derive(Debug)]
 struct User {
-    vehicles: Vehicles,
+    // vehicles: Vehicles,
 }
